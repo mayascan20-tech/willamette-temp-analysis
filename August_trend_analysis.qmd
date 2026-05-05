@@ -1,0 +1,63 @@
+---
+title: "August_trend_analysis"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(here)
+load_temp <- read_csv(here("data", "willamete_temp1.csv"))
+load_temp$month <- lubridate::month(load_temp$Date, label = TRUE)
+load_temp$year  <- lubridate::year(load_temp$Date)
+load_temp$site_no <- as.character(load_temp$site_no)
+
+aug_data <- subset(load_temp, month == "Aug")
+aug_data
+aug_model <- glm(temp_C ~ year * site_no, data = aug_data)
+summary(aug_model)
+```
+
+```{r}
+coefs <- coef(aug_model)
+
+site_slopes <- tibble(
+  site_no = c("14166000", "14211010", "14211720"),
+  slope_per_year = c(
+    coefs["year"],
+    coefs["year"] + coefs["year:site_no14211010"],
+    coefs["year"] + coefs["year:site_no14211720"]
+  )
+)
+
+site_slopes
+
+aug_data |>
+  group_by(site_no) |>
+  summarize(
+    mean_temp = mean(temp_C, na.rm = TRUE),
+    min_temp  = min(temp_C, na.rm = TRUE),
+    max_temp  = max(temp_C, na.rm = TRUE),
+    n_years   = n_distinct(year)
+  )
+
+ggplot(aug_data, aes(x = year, y = temp_C, color = site_no)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "August temperature trends by site, 2010-2023",
+    x = "Year",
+    y = "Temperature (°C)",
+    color = "Site"
+  ) +
+  theme_minimal()
+
+```
+
+------------------------------------------------------------------------
+
+Conclusions:
+
+1.  Yes, there is a significant trend (**p \< 0.05**) between year and August water temperatures at the reference site (**14166000**), indicating a strong trend in August water temperature over **2010–2023**.
+2.  There is a positive trend between water temperature and time. At the reference site (**14166000**), temperatures rose at approximately **0.13** degrees Celsius per year. Over the full 14-year period, that is approximately **1.8** degrees Celsius of warming in August.
+3.  The baseline temperatures (mean) differ across sites. The reference site (**14166000**) has the lowest temperature of **18.6** degrees Celsius, site **14211010** has a temperature of **19.9** degrees Celsius, site **14211720** has the highest temperature of **22.8** degrees Celsius. The rate of warming (slope per year) differs across sites. The reference site (**14166000**) has the lowest rate of **0.13** degrees Celsius/year and site **14211720** has a moderate rate of **0.15** degrees Celsius/year. Site **14211010** has the highest rate of **0.18** degrees Celsius/year and is statistically significant from the reference site **14166000**, with a p-value of **0.0097** (p \< **0.05**).
