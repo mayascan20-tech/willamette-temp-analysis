@@ -5,6 +5,9 @@ editor: visual
 ---
 
 The `echo: false` option disables the printing of code (only output is displayed).
+
+Loading Libraries
+
 ```{r}
 install.packages("dataRetrieval")
 library(dataRetrieval)
@@ -13,6 +16,9 @@ library(ggplot2)
 library(here)
 
 ```
+
+Loading Data
+
 ```{r}
 siteNumbers <- c("14211720", "14211010", "14166000")
 parameterCd <- "00010"  # water temperature
@@ -27,6 +33,8 @@ load_temp
 
 
 ```
+
+Copy and Pasted from Instructions
 
 ```{r}
 # rename columns for clarity
@@ -44,3 +52,31 @@ ggplot(temp_data, aes(x=Date, y=temp_C, color=site_no)) +
 
 ```
 
+Stream Temperature over Time
+
+```{r}
+ggplot(load_temp, aes(x = Date, y = temp_C, color = site_no)) +
+  geom_line() +
+  labs(title = "Stream Temperature at Willamette River Sites",
+       x = "Date",
+       y = "Temperature (°C)",
+       color = "Site Number") +
+  theme_minimal()
+
+```
+
+Summary Statistics
+
+```{r}
+summary_stats <- load_temp %>% 
+  group_by(site_no) %>% 
+  summarize(
+    mean_temp = mean(temp_C, na.rm = TRUE),
+    min_temp  = min(temp_C, na.rm = TRUE),
+    max_temp  = max(temp_C, na.rm = TRUE),
+    sd_temp   = sd(temp_C, na.rm = TRUE),
+    n_obs     = n()
+  )
+summary_stats
+
+```
