@@ -20,6 +20,7 @@ startDate <- "2010-01-01"
 endDate <- "2023-12-31"
 
 temp_data <- readNWISdv(siteNumbers, parameterCd, startDate, endDate)
+write_csv(temp_data, "willamette_temp.csv")
 ```
 ```{r}
 # rename columns for clarity
@@ -34,5 +35,6 @@ ggplot(temp_data, aes(x=Date, y=temp_C, color=site_no)) +
   labs(title="Stream Temperature at Willamette River Sites",
        x="Date", y="Temperature (°C)", color="Site Number") +
   theme_minimal()
+
 ```
 
