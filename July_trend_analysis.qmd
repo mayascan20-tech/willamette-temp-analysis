@@ -1,0 +1,64 @@
+---
+title: "July_trend_analysis"
+format: html
+editor: visual
+---
+
+## 
+
+```{r}
+library(tidyverse)
+library(here)
+
+load_temp <- read_csv(here("data", "willamete_temp1.csv"))
+
+load_temp$month <- lubridate::month(load_temp$Date, label = TRUE)
+load_temp$year  <- lubridate::year(load_temp$Date)
+
+
+july_data <- subset(load_temp, month == "Jul")
+
+july_model <- glm(temp_C ~ year * site_no, data = july_data)
+summary(july_model)
+
+coefs <- coef(july_model)
+
+site_slopes <- tibble(
+  site_no = c("14166000", "14211010", "14211720"),
+  slope_per_year = c(
+    coefs["year"],
+    coefs["year"] + coefs["year:site_no14211010"],
+    coefs["year"] + coefs["year:site_no14211720"]
+  )
+)
+
+site_slopes
+
+july_data %>% 
+  group_by(site_no) %>% 
+  summarize(
+    mean_temp = mean(temp_C, na.rm = TRUE),
+    min_temp  = min(temp_C, na.rm = TRUE),
+    max_temp  = max(temp_C, na.rm = TRUE),
+    n_years   = n_distinct(year)
+  )
+
+
+ggplot(july_data, aes(x = year, y = temp_C, color = site_no)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "July temperature trends by site, 2010-2023",
+    x = "Year",
+    y = "Temperature (°C)",
+    color = "Site"
+  ) +
+  theme_minimal()
+
+```
+
+Based on the GLM and the plot:
+
+-   **Is there a trend?** Look at the p-value for `year`. If it's significant (\< 0.05), there's a trend at the reference site.
+-   **Is the slope positive or negative?** The sign of the slope estimates tells you.
+-   **Are sites different?** The interaction term p-values tell you whether the slopes differ. The means table shows differences in baseline temperature.
