@@ -14,13 +14,16 @@ load_temp <- read_csv(here("data", "willamete_temp1.csv"))
 
 load_temp$month <- lubridate::month(load_temp$Date, label = TRUE)
 load_temp$year  <- lubridate::year(load_temp$Date)
-
+load_temp$site_no  <- as.character(load_temp$site_no
+                                   )
 
 july_data <- subset(load_temp, month == "Jul")
 
 july_model <- glm(temp_C ~ year * site_no, data = july_data)
 summary(july_model)
+```
 
+```{r}
 coefs <- coef(july_model)
 
 site_slopes <- tibble(
@@ -57,8 +60,8 @@ ggplot(july_data, aes(x = year, y = temp_C, color = site_no)) +
 
 ```
 
-Based on the GLM and the plot:
+1.  Yes, there is a significant trend (\*\*p \\\< 0.05\*\*) between year and July water temperatures at the reference site (\*\*14166000\*\*), indicating a strong trend in July water temperature over \*\*2010–2023\*\*.
 
--   **Is there a trend?** Look at the p-value for `year`. If it's significant (\< 0.05), there's a trend at the reference site.
--   **Is the slope positive or negative?** The sign of the slope estimates tells you.
--   **Are sites different?** The interaction term p-values tell you whether the slopes differ. The means table shows differences in baseline temperature.
+2.  There is a positive trend between water temperature and time. At the reference site (\*\*14166000\*\*), temperatures rose at approximately **0.15** degrees Celsius per year. Over the full 14-year period, that is approximately 2.1 degrees Celsius of warming in July.
+
+3.  The baseline temperatures (mean) differ across sites. The reference site (**14166000**) has the lowest temperature of **18.5** degrees Celsius, site **14211010** has a temperature of **19.5** degrees Celsius, site **14211720** has the highest temperature of **22.1** degrees Celsius. The rate of warming (slope per year) differs across sites. The reference site (**14166000**) has the lowest rate of **0.15** degrees Celsius/year and site **14211720** has a moderate rate of **0.19** degrees Celsius/year. Site **14211010** has the highest rate of **0.23** degrees Celsius/year and and is statistically significant from the reference site **14166000**, with a p-value of **0.002** (p < **0.05**).
